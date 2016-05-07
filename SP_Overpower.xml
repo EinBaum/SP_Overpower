@@ -1,0 +1,88 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
+	<Script file="SP_Overpower.lua"/>
+	<Frame name="SP_OP_Frame" parent="UIParent" hidden="false">
+		<Scripts>
+			<OnLoad>
+				SP_OP_OnLoad();
+			</OnLoad>
+			<OnEvent>
+				SP_OP_OnEvent();
+			</OnEvent>
+			<OnUpdate>
+				SP_OP_OnUpdate(arg1);
+			</OnUpdate>
+		</Scripts>
+
+		<Size>
+			<AbsDimension x="500" y="15" />
+		</Size>
+
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background">
+		</Backdrop>
+
+		<Layers>
+			<Layer level="BORDER">
+				<Texture name="SP_OP_FrameShadowTime">
+					<Color r="1" g="1" b="0" a="1" />
+					<Size>
+						<AbsDimension x="500" y="15" />
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER">
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+
+			<Layer level="ARTWORK">
+				<Texture name="SP_OP_FrameTime">
+					<Color r="1" g="0" b="0" a="1" />
+					<Size>
+						<AbsDimension x="500" y="15" />
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER">
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="SP_OP_FrameText" font="Fonts\FRIZQT__.TTF" text="">
+					<Color r="1" g="1" b="1" a="1" />
+					<Shadow>
+						<Offset x="1" y="1" />
+						<Color r="0" g="0" b="0" />
+					</Shadow>
+					<FontHeight val="15"/>
+					<Size>
+						<AbsDimension x="500" y="15" />
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER">
+						</Anchor>
+					</Anchors>
+				</FontString>
+
+				<FontString name="SP_OP_FrameTargetName" font="Fonts\FRIZQT__.TTF" text="">
+					<Color r="1" g="1" b="1" a="1" />
+					<Shadow>
+						<Offset x="1" y="1" />
+						<Color r="0" g="0" b="0" />
+					</Shadow>
+					<FontHeight val="19"/>
+					<Size>
+						<AbsDimension x="500" y="15" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="115" y="-19" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+</Ui>
