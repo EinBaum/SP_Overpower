@@ -182,7 +182,7 @@ function SP_OP_OnEvent()
 
 	elseif (event == "CHAT_MSG_SPELL_SELF_DAMAGE") then
 
-		local a,b,str = string.find(arg1, " was dodged by (.+).")
+		local a,b,_,str = string.find(arg1, "Your (.+) was dodged by (.+).")
 
 		if a then
 			SP_OP_Reset(str)
