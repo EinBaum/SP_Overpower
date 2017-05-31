@@ -6,7 +6,6 @@
 
 	Shows an alert tooltip and timer bar on your screen when Overpower proccs.
 	Works in all stances and plays a sound.
-	Shows target name on which Overpower can be used.
 
 ### Settings
 
@@ -24,6 +23,18 @@
 
 	Change y-position:
 		/op y [number]
+
+	Change height:
+		/op g [number]
+
+	Change width:
+		/op w [number]
+
+	Change alpha:
+		/op a [number] *(between 0-1)*
+
+	Turn sound on or off:
+		/op sound [on|off]
 
 	Reset default bar position (x=0, y=-115):
 		/op reset

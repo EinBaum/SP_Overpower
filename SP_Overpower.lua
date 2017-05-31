@@ -21,7 +21,7 @@ SP_OP_Name = nil
 
 
 function SP_OP_Print(msg)
-	DEFAULT_CHAT_FRAME:AddMessage("[OP] "..msg, 0.7, 0.4, 1)
+	DEFAULT_CHAT_FRAME:AddMessage("[OP] "..msg, 1, 0.6, 1)
 end
 
 function SP_OP_GetSpellID(name)
@@ -40,26 +40,24 @@ function SP_OP_GetSpellID(name)
 end
 
 function SP_OP_Handler(msg)
-
 	local vars = SP_OP_Split(msg, " ")
+	for k,v in vars do
+		if v == "" then
+			v = nil
+		end
+	end
+
 	local cmd, arg = vars[1], vars[2]
 
-	if (cmd == "") then
-		cmd = nil
-	end
-	if (arg == "") then
-		arg = nil
-	end
-
-	if (cmd == nil and arg == nil) then
-		SP_OP_Print("Chat commands: x, y, reset, show")
-		SP_OP_Print("    Example: /op show")
+	if ((cmd == nil or cmd == "") and arg == nil) then
+		SP_OP_Print("Chat commands: x, y, h, w, a, reset, sound, show")
+		SP_OP_Print("    Example: /op a 0.5")
 		SP_OP_Print("    Example: /op y -150")
 	elseif (cmd == "x") then
 		if (arg ~= nil) then
 			SP_OP_GS["x"] = arg
 			SP_OP_SetPosition()
-			SP_OP_Print("X set: "..arg)
+			SP_OP_Print("X set: " .. arg)
 		else
 			SP_OP_Print("Current x: "..SP_OP_GS["x"]..". To change x say: /op x [number]")
 		end
@@ -67,24 +65,69 @@ function SP_OP_Handler(msg)
 		if (arg ~= nil) then
 			SP_OP_GS["y"] = arg
 			SP_OP_SetPosition()
-			SP_OP_Print("Y set: "..arg)
+			SP_OP_Print("Y set: " .. arg)
 		else
 			SP_OP_Print("Current y: "..SP_OP_GS["y"]..". To change y say: /op y [number]")
 		end
+	elseif (cmd == "w") then
+		if (arg ~= nil) then
+			SP_OP_GS["w"] = arg
+			SP_OP_SetSize()
+			SP_OP_Print("W(idth) set: " .. arg)
+		else
+			SP_OP_Print("Current width: "..SP_OP_GS["w"]..". To change w say: /op w [number]")
+		end
+	elseif (cmd == "h") then
+		if (arg ~= nil) then
+			SP_OP_GS["h"] = arg
+			SP_OP_SetSize()
+			SP_OP_Print("H(eight) set: " .. arg)
+		else
+			SP_OP_Print("Current height: "..SP_OP_GS["h"]..". To change h say: /op h [number]")
+		end
+	elseif (cmd == "a") then
+		if (arg ~= nil) then
+			SP_OP_GS["a"] = math.max(math.min(tonumber(arg), 1), 0)
+			SP_OP_Print("A(lpha) set: " .. arg)
+		else
+			SP_OP_Print("Current alpha: "..SP_OP_GS["a"]..". To change a say: /op a [number]")
+		end
+	elseif (cmd == "sound") then
+		if (arg ~= nil) then
+			local val = "off"
+			if (arg == "on") then val = "on" end
+			SP_OP_GS["sound"] = val
+			SP_OP_Print("Sound set: " .. val)
+		else
+			SP_OP_Print("Sound: "..SP_OP_GS["sound"]..". Use: /st a on|off")
+		end
 	elseif (cmd == "reset") then
-		SP_OP_ResetPosition()
+		SP_OP_GS = nil
+		SP_OP_UpdateGlobal()
+		SP_OP_SetPosition()
+		SP_OP_SetSize()
+		SP_OP_UpdateDisplay()
+		SP_OP_Frame:SetAlpha(0)
 	elseif (cmd == "show") then
-		SP_OP_Reset("Target Name")
 	end
+
+	SP_OP_Reset("Test Name")
 end
 
-function SP_OP_ResetPosition()
-	SP_OP_GS["x"] = 0
-	SP_OP_GS["y"] = -115
-	SP_OP_SetPosition()
-end
 function SP_OP_SetPosition()
 	SP_OP_Frame:SetPoint("CENTER", "UIParent", "CENTER", SP_OP_GS["x"], SP_OP_GS["y"])
+end
+
+function SP_OP_SetSize()
+	local regions = {"SP_OP_Frame", "SP_OP_FrameShadowTime",
+		"SP_OP_FrameTime", "SP_OP_FrameText"}
+
+	for _,region in ipairs(regions) do
+		getglobal(region):SetWidth(SP_OP_GS["w"])
+		getglobal(region):SetHeight(SP_OP_GS["h"])
+	end
+
+	SP_OP_FrameText:SetTextHeight(SP_OP_GS["h"])
 end
 
 function SP_OP_OnLoad()
@@ -98,11 +141,21 @@ function SP_OP_OnLoad()
 end
 
 StaticPopupDialogs["SP_OP_Install"] = {
-	text = TEXT("Thank you for installing SP_Overpower 1.3! Use the chat command /op to change the position of the timer bar."),
+	text = TEXT("Thank you for installing SP_Overpower 2.0! Use the chat command /op to change the position of the timer bar."),
 	button1 = TEXT(YES),
 	timeout = 0,
 	hideOnEscape = 1,
 };
+
+function SP_OP_UpdateGlobal()
+	if not SP_OP_GS then SP_OP_GS = {} end
+	if not SP_OP_GS["x"] then SP_OP_GS["x"] = 0 end
+	if not SP_OP_GS["y"] then SP_OP_GS["y"] = -135 end
+	if not SP_OP_GS["w"] then SP_OP_GS["w"] = 300 end
+	if not SP_OP_GS["h"] then SP_OP_GS["h"] = 15 end
+	if not SP_OP_GS["a"] then SP_OP_GS["a"] = 1 end
+	if not SP_OP_GS["sound"] then SP_OP_GS["sound"] = "on" end
+end
 
 function SP_OP_OnEvent()
 	if (event == "ADDON_LOADED") then
@@ -110,17 +163,15 @@ function SP_OP_OnEvent()
 
 			if (SP_OP_GS == nil) then
 				StaticPopup_Show("SP_OP_Install")
-				SP_OP_GS = {
-					["x"] = 0,
-					["y"] = -115,
-				}
 			end
 
+			SP_OP_UpdateGlobal()
 			SP_OP_SetPosition()
+			SP_OP_SetSize()
 			SP_OP_UpdateDisplay()
 			SP_OP_Frame:SetAlpha(0)
 
-			SP_OP_Print("SP_Overpower 1.3 loaded. Options: /op")
+			SP_OP_Print("SP_Overpower 2.0 loaded. Options: /op")
 		end
 
 	elseif (event == "CHAT_MSG_COMBAT_SELF_MISSES") then
@@ -131,7 +182,6 @@ function SP_OP_OnEvent()
 
 	elseif (event == "CHAT_MSG_SPELL_SELF_DAMAGE") then
 
-		--SP_OP_Print(arg1)
 		local a,b,str = string.find(arg1, " was dodged by (.+).")
 
 		if a then
@@ -139,8 +189,8 @@ function SP_OP_OnEvent()
 		else
 			a,b,str = string.find(arg1, "Your (.+) hits")
 			if not str then a,b,str = string.find(arg1, "Your (.+) crits") end
-			if not str then a,b,str = string.find(arg1, "Your (.+) is") end
-			if not str then a,b,str = string.find(arg1, "Your (.+) misses") end
+			if not str then a,b,str = string.find(arg1, "Your (.+) is parried") end
+			if not str then a,b,str = string.find(arg1, "Your (.+) missed") end
 			if str == "Overpower" then
 				SP_OP_TimeLeft = 0
 				SP_OP_UpdateDisplay()
@@ -177,25 +227,11 @@ function SP_OP_Reset(name)
 	if SP_OP_CDTime < 4 then
 		SP_OP_TimeLeft = 4
 		SP_OP_Name = name
-		SP_OP_FrameTargetName:SetText(name)
 
-		PlaySoundFile("Sound\\Interface\\AuctionWindowClose.wav")
+		if SP_OP_GS["sound"] == "on" then
+			PlaySoundFile("Sound\\Interface\\PlayerInviteA.wav")
+		end
 	end
-	--[[
-
-	/script PlaySoundFile("Sound\\SPELLS\\Strike.wav")
-	/script PlaySoundFile("Sound\\SPELLS\\Screech.wav")
-	/script PlaySoundFile("Sound\\SPELLS\\Purge.wav")
-	/script PlaySoundFile("Sound\\SPELLS\\PathFinding.wav")
-	/script PlaySoundFile("Sound\\SPELLS\\KnockDown.wav")
-	/script PlaySoundFile("Sound\\SPELLS\\HolyWard.wav")
-	/script PlaySoundFile("Sound\\SPELLS\\GhostlyStrikeImpact.wav")
-	/script PlaySoundFile("Sound\\SPELLS\\Exorcism.wav")
-	/script PlaySoundFile("Sound\\SPELLS\\ColdBlood.wav")
-	/script PlaySoundFile("Sound\\Interface\\AuctionWindowClose.wav")
-	/script PlaySoundFile("Sound\\Interface\\AuctionWindowOpen.wav")
-
-	]]--
 end
 function SP_OP_Display(msg)
 	SP_OP_FrameText:SetText(msg)
@@ -205,8 +241,8 @@ function SP_OP_UpdateDisplay()
 		SP_OP_FrameTime:Hide()
 		SP_OP_Frame:SetAlpha(0)
 	else
-		local w = (math.min(SP_OP_TimeLeft, 4 - SP_OP_CDTime) / 4 ) * 500
-		local w2 = (SP_OP_TimeLeft / 4) * 500
+		local w = (math.min(SP_OP_TimeLeft, 4 - SP_OP_CDTime) / 4 ) * SP_OP_GS["w"]
+		local w2 = (SP_OP_TimeLeft / 4) * SP_OP_GS["w"]
 		if w > 0 then
 			SP_OP_FrameTime:SetWidth(w)
 			SP_OP_FrameTime:Show()
@@ -218,7 +254,7 @@ function SP_OP_UpdateDisplay()
 
 		SP_OP_Display(string.sub(SP_OP_TimeLeft, 1, 3))
 
-		SP_OP_Frame:SetAlpha(1)
+		SP_OP_Frame:SetAlpha(SP_OP_GS["a"])
 	end
 end
 
