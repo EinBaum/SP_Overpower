@@ -25,7 +25,7 @@
 		/op y [number]
 
 	Change height:
-		/op g [number]
+		/op h [number]
 
 	Change width:
 		/op w [number]
@@ -36,7 +36,7 @@
 	Turn sound on or off:
 		/op sound [on|off]
 
-	Reset default bar position (x=0, y=-115):
+	Reset all settings to default values:
 		/op reset
 
 	Show the timer. For testing only.
