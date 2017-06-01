@@ -135,6 +135,9 @@ function SP_OP_OnLoad()
 	this:RegisterEvent("CHAT_MSG_COMBAT_SELF_MISSES")
 	this:RegisterEvent("CHAT_MSG_SPELL_SELF_DAMAGE")
 
+	-- Only for Execute dodges (server bug?)
+	this:RegisterEvent("CHAT_MSG_SPELL_DAMAGESHIELDS_ON_SELF")
+
 	SLASH_SPOVERPOWER1 = "/op"
 	SLASH_SPOVERPOWER2 = "/spop"
 	SlashCmdList["SPOVERPOWER"] = SP_OP_Handler
@@ -180,7 +183,8 @@ function SP_OP_OnEvent()
 			SP_OP_Reset(str)
 		end
 
-	elseif (event == "CHAT_MSG_SPELL_SELF_DAMAGE") then
+	elseif (event == "CHAT_MSG_SPELL_SELF_DAMAGE"
+		or  event == "CHAT_MSG_SPELL_DAMAGESHIELDS_ON_SELF") then
 
 		local a,b,_,str = string.find(arg1, "Your (.+) was dodged by (.+).")
 
