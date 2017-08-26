@@ -1,4 +1,6 @@
 
+local version = "2.1"
+
 function SP_OP_Split(s,t)
 	local l = {n=0}
 	local f = function (s)
@@ -50,7 +52,7 @@ function SP_OP_Handler(msg)
 	local cmd, arg = vars[1], vars[2]
 
 	if ((cmd == nil or cmd == "") and arg == nil) then
-		SP_OP_Print("Chat commands: x, y, h, w, a, reset, sound, show")
+		SP_OP_Print("Chat commands: x, y, h (height), w (width), a (alpha), s (scale), reset, sound, show")
 		SP_OP_Print("    Example: /op a 0.5")
 		SP_OP_Print("    Example: /op y -150")
 	elseif (cmd == "x") then
@@ -92,6 +94,14 @@ function SP_OP_Handler(msg)
 		else
 			SP_OP_Print("Current alpha: "..SP_OP_GS["a"]..". To change a say: /op a [number]")
 		end
+	elseif (cmd == "s") then
+		if (arg ~= nil) then
+			SP_OP_GS["s"] = arg
+			SP_OP_SetSize()
+			SP_OP_Print("S(scale) set: " .. arg)
+		else
+			SP_OP_Print("Current scale: "..SP_OP_GS["s"]..". To change s say: /op s [number]")
+		end
 	elseif (cmd == "sound") then
 		if (arg ~= nil) then
 			local val = "off"
@@ -128,6 +138,8 @@ function SP_OP_SetSize()
 	end
 
 	SP_OP_FrameText:SetTextHeight(SP_OP_GS["h"])
+
+	SP_OP_Frame:SetScale(SP_OP_GS["s"])
 end
 
 function SP_OP_OnLoad()
@@ -144,7 +156,7 @@ function SP_OP_OnLoad()
 end
 
 StaticPopupDialogs["SP_OP_Install"] = {
-	text = TEXT("Thank you for installing SP_Overpower 2.0! Use the chat command /op to change the position of the timer bar."),
+	text = TEXT("Thank you for installing SP_Overpower " .. version .. "! Use the chat command /op to change the position of the timer bar."),
 	button1 = TEXT(YES),
 	timeout = 0,
 	hideOnEscape = 1,
@@ -157,6 +169,7 @@ function SP_OP_UpdateGlobal()
 	if not SP_OP_GS["w"] then SP_OP_GS["w"] = 300 end
 	if not SP_OP_GS["h"] then SP_OP_GS["h"] = 15 end
 	if not SP_OP_GS["a"] then SP_OP_GS["a"] = 1 end
+	if not SP_OP_GS["s"] then SP_OP_GS["s"] = 1 end
 	if not SP_OP_GS["sound"] then SP_OP_GS["sound"] = "on" end
 end
 
@@ -174,7 +187,7 @@ function SP_OP_OnEvent()
 			SP_OP_UpdateDisplay()
 			SP_OP_Frame:SetAlpha(0)
 
-			SP_OP_Print("SP_Overpower 2.0 loaded. Options: /op")
+			SP_OP_Print("SP_Overpower " .. version .. " loaded. Options: /op")
 		end
 
 	elseif (event == "CHAT_MSG_COMBAT_SELF_MISSES") then
@@ -261,8 +274,3 @@ function SP_OP_UpdateDisplay()
 		SP_OP_Frame:SetAlpha(SP_OP_GS["a"])
 	end
 end
-
-
-
-
-

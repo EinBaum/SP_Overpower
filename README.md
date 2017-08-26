@@ -33,6 +33,12 @@
 	Change alpha:
 		/op a [number] *(between 0-1)*
 
+	Get scale:
+		/st s
+
+	Change scale:
+		/st s [number]
+
 	Turn sound on or off:
 		/op sound [on|off]
 
