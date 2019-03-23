@@ -1,7 +1,47 @@
 
-local version = "2.1"
+local version = "3.0.0"
 
-function SP_OP_Split(s,t)
+local defaults = {
+	x = 0,
+	y = -161,
+	w = 200,
+	h = 13,
+	b = 0,
+	a = 1,
+	s = 1,
+	sound = "off"
+}
+local settings = {
+	x = "Bar X position",
+	y = "Bar Y position",
+	w = "Bar width",
+	h = "Bar height",
+	b = "Border height",
+	a = "Alpha between 0 and 1",
+	s = "Bar scale",
+	sound = "Sound 'on' or 'off'"
+}
+
+--------------------------------------------------------------------------------
+
+local op_timeLeft = 0.0
+local op_CDTime = 0.0
+
+--------------------------------------------------------------------------------
+
+StaticPopupDialogs["SP_OP_Install"] = {
+	text = TEXT("Thank you for installing SP_Overpower " .. version .. "! Use the chat command /op to change the position of the timer bar."),
+	button1 = TEXT(YES),
+	timeout = 0,
+	hideOnEscape = 1,
+};
+
+--------------------------------------------------------------------------------
+
+local function print(msg)
+	DEFAULT_CHAT_FRAME:AddMessage(msg, 1, 0.7, 0.9)
+end
+local function SplitString(s,t)
 	local l = {n=0}
 	local f = function (s)
 		l.n = l.n + 1
@@ -16,17 +56,9 @@ function SP_OP_Split(s,t)
 	return l
 end
 
+--------------------------------------------------------------------------------
 
-SP_OP_TimeLeft = 0.0
-SP_OP_CDTime = 0.0
-SP_OP_Name = nil
-
-
-function SP_OP_Print(msg)
-	DEFAULT_CHAT_FRAME:AddMessage("[OP] "..msg, 1, 0.6, 1)
-end
-
-function SP_OP_GetSpellID(name)
+local function GetSpellID(name)
 	local spellID = 1
 	local spellName = nil
 	while 1 do
@@ -40,107 +72,85 @@ function SP_OP_GetSpellID(name)
 		spellID = spellID + 1
 	end
 end
-
-function SP_OP_Handler(msg)
-	local vars = SP_OP_Split(msg, " ")
-	for k,v in vars do
-		if v == "" then
-			v = nil
+local function UpdateSettings()
+	if not SP_OP_GS then SP_OP_GS = {} end
+	for option, value in defaults do
+		if SP_OP_GS[option] == nil then
+			SP_OP_GS[option] = value
 		end
 	end
-
-	local cmd, arg = vars[1], vars[2]
-
-	if ((cmd == nil or cmd == "") and arg == nil) then
-		SP_OP_Print("Chat commands: x, y, h (height), w (width), a (alpha), s (scale), reset, sound, show")
-		SP_OP_Print("    Example: /op a 0.5")
-		SP_OP_Print("    Example: /op y -150")
-	elseif (cmd == "x") then
-		if (arg ~= nil) then
-			SP_OP_GS["x"] = arg
-			SP_OP_SetPosition()
-			SP_OP_Print("X set: " .. arg)
-		else
-			SP_OP_Print("Current x: "..SP_OP_GS["x"]..". To change x say: /op x [number]")
-		end
-	elseif (cmd == "y") then
-		if (arg ~= nil) then
-			SP_OP_GS["y"] = arg
-			SP_OP_SetPosition()
-			SP_OP_Print("Y set: " .. arg)
-		else
-			SP_OP_Print("Current y: "..SP_OP_GS["y"]..". To change y say: /op y [number]")
-		end
-	elseif (cmd == "w") then
-		if (arg ~= nil) then
-			SP_OP_GS["w"] = arg
-			SP_OP_SetSize()
-			SP_OP_Print("W(idth) set: " .. arg)
-		else
-			SP_OP_Print("Current width: "..SP_OP_GS["w"]..". To change w say: /op w [number]")
-		end
-	elseif (cmd == "h") then
-		if (arg ~= nil) then
-			SP_OP_GS["h"] = arg
-			SP_OP_SetSize()
-			SP_OP_Print("H(eight) set: " .. arg)
-		else
-			SP_OP_Print("Current height: "..SP_OP_GS["h"]..". To change h say: /op h [number]")
-		end
-	elseif (cmd == "a") then
-		if (arg ~= nil) then
-			SP_OP_GS["a"] = math.max(math.min(tonumber(arg), 1), 0)
-			SP_OP_Print("A(lpha) set: " .. arg)
-		else
-			SP_OP_Print("Current alpha: "..SP_OP_GS["a"]..". To change a say: /op a [number]")
-		end
-	elseif (cmd == "s") then
-		if (arg ~= nil) then
-			SP_OP_GS["s"] = arg
-			SP_OP_SetSize()
-			SP_OP_Print("S(scale) set: " .. arg)
-		else
-			SP_OP_Print("Current scale: "..SP_OP_GS["s"]..". To change s say: /op s [number]")
-		end
-	elseif (cmd == "sound") then
-		if (arg ~= nil) then
-			local val = "off"
-			if (arg == "on") then val = "on" end
-			SP_OP_GS["sound"] = val
-			SP_OP_Print("Sound set: " .. val)
-		else
-			SP_OP_Print("Sound: "..SP_OP_GS["sound"]..". Use: /st a on|off")
-		end
-	elseif (cmd == "reset") then
-		SP_OP_GS = nil
-		SP_OP_UpdateGlobal()
-		SP_OP_SetPosition()
-		SP_OP_SetSize()
-		SP_OP_UpdateDisplay()
-		SP_OP_Frame:SetAlpha(0)
-	elseif (cmd == "show") then
-	end
-
-	SP_OP_Reset("Test Name")
 end
-
-function SP_OP_SetPosition()
+local function UpdateAppearance()
+	SP_OP_Frame:ClearAllPoints()
 	SP_OP_Frame:SetPoint("CENTER", "UIParent", "CENTER", SP_OP_GS["x"], SP_OP_GS["y"])
-end
 
-function SP_OP_SetSize()
 	local regions = {"SP_OP_Frame", "SP_OP_FrameShadowTime",
 		"SP_OP_FrameTime", "SP_OP_FrameText"}
 
 	for _,region in ipairs(regions) do
 		getglobal(region):SetWidth(SP_OP_GS["w"])
-		getglobal(region):SetHeight(SP_OP_GS["h"])
 	end
 
-	SP_OP_FrameText:SetTextHeight(SP_OP_GS["h"])
+	SP_OP_Frame:SetHeight(SP_OP_GS["h"])
+	SP_OP_FrameText:SetHeight(SP_OP_GS["h"])
 
+	SP_OP_FrameTime:SetHeight(SP_OP_GS["h"] - SP_OP_GS["b"])
+	SP_OP_FrameShadowTime:SetHeight(SP_OP_GS["h"] - SP_OP_GS["b"])
+
+	SP_OP_FrameText:SetFont("Fonts\\FRIZQT__.TTF", SP_OP_GS["h"])
+	SP_OP_Frame:SetAlpha(SP_OP_GS["a"])
 	SP_OP_Frame:SetScale(SP_OP_GS["s"])
 end
+local function ResetTimer(name)
+	local op_spellID = GetSpellID("Overpower")
+	if op_spellID == nil then
+		return
+	end
+
+	local op_start, op_dur = GetSpellCooldown(op_spellID, BOOKTYPE_SPELL)
+	if op_start > 0 then
+		op_CDTime = op_dur - (GetTime() - op_start)
+	else
+		op_CDTime = 0
+	end
+
+	if op_CDTime < 4 then
+		if SP_OP_GS["sound"] == "on" or SP_OP_GS["sound"] == 1 then
+			PlaySoundFile("Sound\\Interface\\PlayerInviteA.wav")
+		end
+		op_timeLeft = 4
+		SP_OP_Frame:Show()
+	end
+end
+local function TestShow()
+	ResetTimer("Test Name")
+end
+local function SetBarText(msg)
+	SP_OP_FrameText:SetText(msg)
+end
+local function UpdateDisplay()
+	if (op_timeLeft <= 0) then
+		SP_OP_FrameTime:Hide()
+		SP_OP_Frame:Hide()
+	else
+		local w = (math.min(op_timeLeft, 4 - op_CDTime) / 4 ) * SP_OP_GS["w"]
+		local w2 = (op_timeLeft / 4) * SP_OP_GS["w"]
+		if w > 0 then
+			SP_OP_FrameTime:SetWidth(w)
+			SP_OP_FrameTime:Show()
+		else
+			SP_OP_FrameTime:Hide()
+		end
+		SP_OP_FrameShadowTime:SetWidth(w2)
+		SP_OP_FrameShadowTime:Show()
+
+		SetBarText(string.sub(op_timeLeft, 1, 3))
+
+		SP_OP_Frame:SetAlpha(SP_OP_GS["a"])
+	end
+end
+
+--------------------------------------------------------------------------------
 
 function SP_OP_OnLoad()
 	this:RegisterEvent("ADDON_LOADED")
@@ -149,28 +159,6 @@ function SP_OP_OnLoad()
 
 	-- Only for Execute dodges (server bug?)
 	this:RegisterEvent("CHAT_MSG_SPELL_DAMAGESHIELDS_ON_SELF")
-
-	SLASH_SPOVERPOWER1 = "/op"
-	SLASH_SPOVERPOWER2 = "/spop"
-	SlashCmdList["SPOVERPOWER"] = SP_OP_Handler
-end
-
-StaticPopupDialogs["SP_OP_Install"] = {
-	text = TEXT("Thank you for installing SP_Overpower " .. version .. "! Use the chat command /op to change the position of the timer bar."),
-	button1 = TEXT(YES),
-	timeout = 0,
-	hideOnEscape = 1,
-};
-
-function SP_OP_UpdateGlobal()
-	if not SP_OP_GS then SP_OP_GS = {} end
-	if not SP_OP_GS["x"] then SP_OP_GS["x"] = 0 end
-	if not SP_OP_GS["y"] then SP_OP_GS["y"] = -135 end
-	if not SP_OP_GS["w"] then SP_OP_GS["w"] = 300 end
-	if not SP_OP_GS["h"] then SP_OP_GS["h"] = 15 end
-	if not SP_OP_GS["a"] then SP_OP_GS["a"] = 1 end
-	if not SP_OP_GS["s"] then SP_OP_GS["s"] = 1 end
-	if not SP_OP_GS["sound"] then SP_OP_GS["sound"] = "on" end
 end
 
 function SP_OP_OnEvent()
@@ -181,19 +169,17 @@ function SP_OP_OnEvent()
 				StaticPopup_Show("SP_OP_Install")
 			end
 
-			SP_OP_UpdateGlobal()
-			SP_OP_SetPosition()
-			SP_OP_SetSize()
-			SP_OP_UpdateDisplay()
-			SP_OP_Frame:SetAlpha(0)
+			UpdateSettings()
+			UpdateAppearance()
+			UpdateDisplay()
 
-			SP_OP_Print("SP_Overpower " .. version .. " loaded. Options: /op")
+			print("SP_Overpower " .. version .. " loaded. Options: /op")
 		end
 
 	elseif (event == "CHAT_MSG_COMBAT_SELF_MISSES") then
 		local a,b,str = string.find(arg1, "You attack. (.+) dodges.")
 		if a then
-			SP_OP_Reset(str)
+			ResetTimer(str)
 		end
 
 	elseif (event == "CHAT_MSG_SPELL_SELF_DAMAGE"
@@ -202,75 +188,69 @@ function SP_OP_OnEvent()
 		local a,b,_,str = string.find(arg1, "Your (.+) was dodged by (.+).")
 
 		if a then
-			SP_OP_Reset(str)
+			ResetTimer(str)
 		else
 			a,b,str = string.find(arg1, "Your (.+) hits")
 			if not str then a,b,str = string.find(arg1, "Your (.+) crits") end
 			if not str then a,b,str = string.find(arg1, "Your (.+) is parried") end
 			if not str then a,b,str = string.find(arg1, "Your (.+) missed") end
 			if str == "Overpower" then
-				SP_OP_TimeLeft = 0
-				SP_OP_UpdateDisplay()
+				op_timeLeft = 0
+				UpdateDisplay()
 			end
 		end
 	end
 end
 
 function SP_OP_OnUpdate(delta)
-	if (SP_OP_TimeLeft > 0) then
-
-		SP_OP_TimeLeft = SP_OP_TimeLeft - delta
-		if (SP_OP_TimeLeft < 0) then
-			SP_OP_TimeLeft = 0
+	if (op_timeLeft > 0) then
+		op_timeLeft = op_timeLeft - delta
+		if (op_timeLeft < 0) then
+			op_timeLeft = 0
 		end
-
-		SP_OP_UpdateDisplay()
 	end
+	UpdateDisplay()
 end
 
-function SP_OP_Reset(name)
-	local op_spellID = SP_OP_GetSpellID("Overpower")
-	if op_spellID == nil then
-		return
-	end
+--------------------------------------------------------------------------------
 
-	local op_start, op_dur = GetSpellCooldown(op_spellID, BOOKTYPE_SPELL)
-	if op_start > 0 then
-		SP_OP_CDTime = op_dur - (GetTime() - op_start)
+SLASH_SPOVERPOWER1 = "/op"
+SLASH_SPOVERPOWER2 = "/overpower"
+
+local function ChatHandler(msg)
+	local vars = SplitString(msg, " ")
+	for k,v in vars do
+		if v == "" then
+			v = nil
+		end
+	end
+	local cmd, arg = vars[1], vars[2]
+	if cmd == "reset" then
+		SP_OP_GS = nil
+		UpdateSettings()
+		UpdateAppearance()
+		print("Reset to defaults.")
+	elseif settings[cmd] ~= nil then
+		if arg ~= nil then
+			if arg == "on" then arg = 1 end
+			if arg == "off" then arg = 0 end
+			local number = tonumber(arg)
+			if number then
+				SP_OP_GS[cmd] = number
+				UpdateAppearance()
+			else
+				print("Error: Invalid argument")
+			end
+		end
+		print(format("%s %s %s (%s)",
+			SLASH_SPOVERPOWER1, cmd, SP_OP_GS[cmd], settings[cmd]))
 	else
-		SP_OP_CDTime = 0
-	end
-
-	if SP_OP_CDTime < 4 then
-		SP_OP_TimeLeft = 4
-		SP_OP_Name = name
-
-		if SP_OP_GS["sound"] == "on" then
-			PlaySoundFile("Sound\\Interface\\PlayerInviteA.wav")
+		for k, v in settings do
+			print(format("%s %s %s (%s)",
+				SLASH_SPOVERPOWER1, k, SP_OP_GS[k], v))
 		end
 	end
+	TestShow()
 end
-function SP_OP_Display(msg)
-	SP_OP_FrameText:SetText(msg)
-end
-function SP_OP_UpdateDisplay()
-	if (SP_OP_TimeLeft <= 0) then
-		SP_OP_FrameTime:Hide()
-		SP_OP_Frame:SetAlpha(0)
-	else
-		local w = (math.min(SP_OP_TimeLeft, 4 - SP_OP_CDTime) / 4 ) * SP_OP_GS["w"]
-		local w2 = (SP_OP_TimeLeft / 4) * SP_OP_GS["w"]
-		if w > 0 then
-			SP_OP_FrameTime:SetWidth(w)
-			SP_OP_FrameTime:Show()
-		else
-			SP_OP_FrameTime:Hide()
-		end
-		SP_OP_FrameShadowTime:SetWidth(w2)
-		SP_OP_FrameShadowTime:Show()
 
-		SP_OP_Display(string.sub(SP_OP_TimeLeft, 1, 3))
-
-		SP_OP_Frame:SetAlpha(SP_OP_GS["a"])
-	end
-end
+SlashCmdList["SPOVERPOWER"] = ChatHandler

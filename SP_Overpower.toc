@@ -1,8 +1,8 @@
 ## Interface: 11200
 ## Title: SP_|cffa050ffOverpower|r
 ## Author: https://github.com/EinBaum
-## Version: 2.1
-## Notes: Overpower alert and timer. Shows an icon and a timer bar on the screen. Chat command: |cffa050ff/op|r
+## Version: 3.0.0
+## Notes: Overpower alert and timer. Chat command: |cffa050ff/op|r
 ## Dependencies:
 ## OptionalDeps:
 ## SavedVariablesPerCharacter:

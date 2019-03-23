@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
 	<Script file="SP_Overpower.lua"/>
-	<Frame name="SP_OP_Frame" parent="UIParent" hidden="false">
+	<Frame name="SP_OP_Frame" parent="UIParent" hidden="true">
 		<Scripts>
 			<OnLoad>
 				SP_OP_OnLoad();
@@ -15,7 +15,7 @@
 		</Scripts>
 
 		<Size>
-			<AbsDimension x="500" y="15" />
+			<AbsDimension x="200" y="13" />
 		</Size>
 
 		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background">
@@ -26,7 +26,7 @@
 				<Texture name="SP_OP_FrameShadowTime">
 					<Color r="1" g="1" b="0" a="1" />
 					<Size>
-						<AbsDimension x="500" y="15" />
+						<AbsDimension x="200" y="13" />
 					</Size>
 					<Anchors>
 						<Anchor point="CENTER">
@@ -39,7 +39,7 @@
 				<Texture name="SP_OP_FrameTime">
 					<Color r="1" g="0" b="0" a="1" />
 					<Size>
-						<AbsDimension x="500" y="15" />
+						<AbsDimension x="200" y="13" />
 					</Size>
 					<Anchors>
 						<Anchor point="CENTER">
@@ -54,9 +54,9 @@
 						<Offset x="1" y="1" />
 						<Color r="0" g="0" b="0" />
 					</Shadow>
-					<FontHeight val="15"/>
+					<FontHeight val="13"/>
 					<Size>
-						<AbsDimension x="500" y="15" />
+						<AbsDimension x="200" y="13" />
 					</Size>
 					<Anchors>
 						<Anchor point="CENTER">
